@@ -8,8 +8,8 @@ from app.schemas import StudentProfile
 
 def shortlist_programs(student: StudentProfile, k: int | None = None) -> list[dict]:
     """Return the top-k programs most similar to the student's profile,
-    ranked by cosine similarity. Falls back to the full catalog if the
-    RPC is unavailable or no programs have embeddings yet."""
+    ranked by cosine similarity. An empty result lets the calling route
+    fall back to the full catalog when no embeddings have been seeded."""
     settings = get_settings()
     top_k = k or settings.retrieval_top_k
 
