@@ -1,4 +1,4 @@
-# PreMatching Agent
+# Pre-College Programs Matching Agent
 
 A full-stack application that helps students discover pre-college programs aligned with their interests, academic stage, goals, and budget. It combines semantic search with personalized recommendations, program-specific chat, and a saved shortlist.
 
