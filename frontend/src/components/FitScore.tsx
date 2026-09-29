@@ -1,6 +1,6 @@
 import { cn } from "../lib/utils";
 
-export function tierFor(score: number): "strong" | "solid" | "stretch" {
+function tierFor(score: number): "strong" | "solid" | "stretch" {
   if (score >= 85) return "strong";
   if (score >= 70) return "solid";
   return "stretch";

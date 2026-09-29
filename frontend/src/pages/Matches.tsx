@@ -9,26 +9,18 @@ import type { MatchResponse, Program } from "../types";
 
 export function Matches() {
   const navigate = useNavigate();
-  const [matches, setMatches] = useState<MatchResponse | null>(null);
+  const [matches] = useState<MatchResponse | null>(() => storage.getMatches());
+  const [student] = useState(() => storage.getStudent());
   const [programs, setPrograms] = useState<Record<string, Program>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [freeOnly, setFreeOnly] = useState(false);
+  const [freeOnly, setFreeOnly] = useState(() => student?.cost_preference === "free_or_aid_only");
 
   useEffect(() => {
-    const stored = storage.getMatches();
-    const student = storage.getStudent();
-    if (!stored || !student) {
+    if (!matches || !student) {
       navigate("/intake");
       return;
     }
-    setMatches(stored);
-
-    // Honor the student's cost preference as the default filter state.
-    if (student.cost_preference === "free_or_aid_only") {
-      setFreeOnly(true);
-    }
-
     api
       .listPrograms()
       .then((list) => {
@@ -38,7 +30,7 @@ export function Matches() {
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
-  }, [navigate]);
+  }, [navigate, matches, student]);
 
   const visible = useMemo(() => {
     if (!matches) return [];

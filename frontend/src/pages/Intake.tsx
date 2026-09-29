@@ -79,35 +79,21 @@ const LOADING_STEPS = [
 
 export function Intake() {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [grade, setGrade] = useState<GradeLevel>("rising junior");
-  const [interests, setInterests] = useState<string[]>([]);
+  const [stored] = useState(() => storage.getStudent());
+  const [name, setName] = useState(stored?.name ?? "");
+  const [grade, setGrade] = useState<GradeLevel>(stored?.grade_level ?? "rising junior");
+  const [interests, setInterests] = useState<string[]>(stored?.interests ?? []);
   const [interestInput, setInterestInput] = useState("");
-  const [gpa, setGpa] = useState("");
-  const [format, setFormat] = useState<Format>("no preference");
-  const [costPref, setCostPref] = useState<CostPreference>("no_preference");
-  const [goalTags, setGoalTags] = useState<GoalTag[]>([]);
-  const [budget, setBudget] = useState("");
-  const [goals, setGoals] = useState("");
-  const [priorExperience, setPriorExperience] = useState("");
+  const [gpa, setGpa] = useState(stored?.gpa != null ? String(stored.gpa) : "");
+  const [format, setFormat] = useState<Format>(stored?.location_flexibility ?? "no preference");
+  const [costPref, setCostPref] = useState<CostPreference>(stored?.cost_preference ?? "no_preference");
+  const [goalTags, setGoalTags] = useState<GoalTag[]>(stored?.goal_tags ?? []);
+  const [budget, setBudget] = useState(stored?.budget_note ?? "");
+  const [goals, setGoals] = useState(stored?.goals ?? "");
+  const [priorExperience, setPriorExperience] = useState(stored?.prior_experience ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const stored = storage.getStudent();
-    if (!stored) return;
-    setName(stored.name);
-    setGrade(stored.grade_level);
-    setInterests(stored.interests);
-    setGpa(stored.gpa != null ? String(stored.gpa) : "");
-    setFormat(stored.location_flexibility);
-    setCostPref(stored.cost_preference ?? "no_preference");
-    setGoalTags(stored.goal_tags ?? []);
-    setBudget(stored.budget_note ?? "");
-    setGoals(stored.goals ?? "");
-    setPriorExperience(stored.prior_experience ?? "");
-  }, []);
 
   useEffect(() => {
     if (!submitting) return;

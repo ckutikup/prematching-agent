@@ -15,32 +15,35 @@ const IMPACT_PROMPT =
 
 export function ProgramDetail() {
   const { slug } = useParams<{ slug: string }>();
+  return <ProgramDetailContent key={slug} slug={slug} />;
+}
+
+function ProgramDetailContent({ slug }: { slug?: string }) {
   const [program, setProgram] = useState<Program | null>(null);
-  const [student, setStudent] = useState<StoredStudent | null>(null);
+  const [student] = useState<StoredStudent | null>(() => storage.getStudent());
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [impact, setImpact] = useState<string | null>(null);
-  const [impactLoading, setImpactLoading] = useState(false);
+  const [impactLoading, setImpactLoading] = useState(() => Boolean(student && slug));
 
   useEffect(() => {
     if (!slug) return;
-    const s = storage.getStudent();
-    setStudent(s);
+    const s = student;
+    let active = true;
 
     api
       .getProgram(slug)
-      .then(setProgram)
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"))
-      .finally(() => setLoading(false));
+      .then((value) => { if (active) setProgram(value); })
+      .catch((e) => { if (active) setError(e instanceof Error ? e.message : "Failed to load"); })
+      .finally(() => { if (active) setLoading(false); });
 
     if (s) {
       api.listSaved(s.id).then((list) => {
-        setSaved(list.some((e) => e.program_slug === slug));
-      });
+        if (active) setSaved(list.some((e) => e.program_slug === slug));
+      }).catch(() => { /* Saving remains available when shortlist lookup fails. */ });
 
-      setImpactLoading(true);
       api
         .chat({
           student: s,
@@ -48,11 +51,12 @@ export function ProgramDetail() {
           history: [],
           message: IMPACT_PROMPT,
         })
-        .then((r) => setImpact(r.reply))
-        .catch(() => setImpact(null))
-        .finally(() => setImpactLoading(false));
+        .then((r) => { if (active) setImpact(r.reply); })
+        .catch(() => { if (active) setImpact(null); })
+        .finally(() => { if (active) setImpactLoading(false); });
     }
-  }, [slug]);
+    return () => { active = false; };
+  }, [slug, student]);
 
   async function toggleSave() {
     if (!student || !program || saving) return;
@@ -65,6 +69,8 @@ export function ProgramDetail() {
         await api.save(student.id, program.slug);
         setSaved(true);
       }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update saved program");
     } finally {
       setSaving(false);
     }

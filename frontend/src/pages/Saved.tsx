@@ -6,22 +6,17 @@ import { storage } from "../lib/storage";
 import type { SavedEntry } from "../types";
 
 export function Saved() {
-  const [entries, setEntries] = useState<SavedEntry[] | null>(null);
-  const [studentId, setStudentId] = useState<string | null>(null);
+  const [studentId] = useState(() => storage.getStudent()?.id ?? null);
+  const [entries, setEntries] = useState<SavedEntry[] | null>(() => studentId ? null : []);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const student = storage.getStudent();
-    if (!student) {
-      setEntries([]);
-      return;
-    }
-    setStudentId(student.id);
+    if (!studentId) return;
     api
-      .listSaved(student.id)
+      .listSaved(studentId)
       .then(setEntries)
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"));
-  }, []);
+  }, [studentId]);
 
   async function handleUnsave(slug: string) {
     if (!studentId || !entries) return;
